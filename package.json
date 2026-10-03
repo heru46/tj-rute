@@ -1,0 +1,15 @@
+{
+  "name": "tj-rute",
+  "private": true,
+  "type": "module",
+  "description": "Perencana perjalanan Transjakarta (GTFS resmi), webapp statis mobile",
+  "scripts": {
+    "data": "node scripts/build-data.mjs",
+    "data:fresh": "node scripts/build-data.mjs --fresh",
+    "test": "node --test",
+    "serve": "python -m http.server 8080 --bind 127.0.0.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
