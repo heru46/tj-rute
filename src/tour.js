@@ -50,7 +50,7 @@ export function createTour({ steps, storageKey, onEnd = () => {} }) {
   function onKey(e) {
     if (!root) return;
     if (e.key === 'Escape') end();
-    else if ((e.key === 'Enter' || e.key === 'ArrowRight') && !e.target.closest('input')) { e.preventDefault(); next(); }
+    else if ((e.key === 'Enter' || e.key === 'ArrowRight') && !e.target.closest('input, button')) { e.preventDefault(); next(); }
   }
 
   async function show(i) {
