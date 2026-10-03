@@ -2,35 +2,39 @@ import { prepare, planAlternatives, nearbyStops, ACCESS_M } from './router.js';
 import { price } from './fare.js';
 import { createSearch } from './search.js';
 import { createMap } from './map.js';
-import { renderList, renderDetail } from './results.js';
+import { createSheet } from './sheet.js';
+import { ICONS } from './icons.js';
+import { renderHome, renderSuggestions, renderList, renderDetail, renderEmpty } from './views.js';
 import { escapeHtml as esc } from './format.js';
 
 const $ = (s) => document.querySelector(s);
 const els = {
   from: $('#from'), to: $('#to'), locate: $('#locate'), swap: $('#swap'),
-  when: $('#when'), whenNow: $('#when-now'), suggest: $('#suggest'),
+  when: $('#when'), whenLabel: $('#when-label'), whenNow: $('#when-now'),
   pickbar: $('#pickbar'), pickLabel: $('#pick-label'), pickCancel: $('#pick-cancel'),
-  status: $('#status'), sheet: $('#sheet'), sheetBody: $('#sheet-body'), handle: $('#sheet-handle'),
+  status: $('#status'), sheet: $('#sheet'), head: $('#sheet-head'), content: $('#content'),
 };
+
+// Ikon statis di markup.
+document.querySelectorAll('[data-icon]').forEach((n) => { n.outerHTML = ICONS[n.dataset.icon]; });
+els.swap.innerHTML = ICONS.swap;
+els.whenNow.innerHTML = ICONS.close;
+document.querySelectorAll('.clear').forEach((b) => { b.innerHTML = ICONS.close; });
 
 const state = {
   network: null, index: null, search: null, shapes: null,
-  from: null, to: null, active: 'from', whenTouched: false,
-  items: [], selected: -1,
+  from: null, to: null, active: null, whenTouched: false,
+  items: [], view: 'home',
 };
-
-// Tinggi kartu atas dipakai CSS untuk menaruh daftar saran dan status tepat di bawahnya.
-const card = $('#card');
-new ResizeObserver(() => {
-  document.documentElement.style.setProperty('--card-h', `${card.getBoundingClientRect().height}px`);
-}).observe(card);
 const map = createMap($('#map'));
+const sheet = createSheet(els.sheet, { grabArea: els.head, head: els.head, onResize: (px) => map.setBottomInset(px) });
+sheet.set('medium', false);
 
 // ── status ──
 let statusTimer = 0;
 function showStatus(text, { sticky = false, action = null } = {}) {
   clearTimeout(statusTimer);
-  els.status.innerHTML = esc(text) + (action ? ` <button type="button" class="link-btn">${esc(action.label)}</button>` : '');
+  els.status.innerHTML = esc(text) + (action ? ` <button type="button" class="text-btn">${esc(action.label)}</button>` : '');
   els.status.hidden = false;
   if (action) els.status.querySelector('button').addEventListener('click', action.run);
   if (!sticky) statusTimer = setTimeout(() => { els.status.hidden = true; }, 4500);
@@ -38,144 +42,179 @@ function showStatus(text, { sticky = false, action = null } = {}) {
 function hideStatus() { els.status.hidden = true; }
 
 // ── waktu berangkat ──
+const HARI = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 function toLocalInput(d) {
   const p = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 function departure() {
   const d = state.whenTouched && els.when.value ? new Date(els.when.value) : new Date();
-  if (!state.whenTouched) els.when.value = toLocalInput(d);
   return { date: d, sec: d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds() };
 }
+function syncWhenLabel() {
+  if (!state.whenTouched) {
+    els.whenLabel.textContent = 'Berangkat sekarang';
+    els.whenNow.hidden = true;
+    return;
+  }
+  const d = new Date(els.when.value);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const jam = `${String(d.getHours()).padStart(2, '0')}.${String(d.getMinutes()).padStart(2, '0')}`;
+  els.whenLabel.textContent = `Berangkat ${sameDay ? '' : `${HARI[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1} `}${jam}`;
+  els.whenNow.hidden = false;
+}
 els.when.value = toLocalInput(new Date());
+els.when.addEventListener('click', () => { try { els.when.showPicker(); } catch { /* fokus biasa */ } });
+els.when.addEventListener('focus', () => { if (!state.whenTouched) els.when.value = toLocalInput(new Date()); });
 els.when.addEventListener('change', () => {
   state.whenTouched = !!els.when.value;
-  els.whenNow.hidden = !state.whenTouched;
+  syncWhenLabel();
   compute();
 });
 els.whenNow.addEventListener('click', () => {
   state.whenTouched = false;
-  els.whenNow.hidden = true;
+  syncWhenLabel();
   compute();
 });
 
+// ── tampilan isi sheet ──
+function showHome() {
+  state.view = 'home';
+  renderHome(els.content);
+}
+
+function restoreView() {
+  if (state.items.length && state.from && state.to) showList();
+  else if (state.from && state.to) compute();
+  else showHome();
+}
+
 // ── titik A/B ──
 function inputOf(which) { return which === 'from' ? els.from : els.to; }
+function syncClear(which) {
+  document.querySelector(`[data-clear="${which}"]`).hidden = !inputOf(which).value;
+}
 
 function setPoint(which, point) {
   state[which] = point;
   inputOf(which).value = point ? point.name : '';
+  syncClear(which);
   map.setPoint(which, point);
-  closeSuggest();
-  if (state.from && state.to) compute();
-  else {
-    map.fitPoints();
-    const other = which === 'from' ? 'to' : 'from';
-    if (point && !state[other]) inputOf(other).focus();
+  if (state.from && state.to) {
+    state.active = null;
+    document.activeElement?.blur();
+    compute();
+    return;
   }
+  const other = which === 'from' ? 'to' : 'from';
+  if (point && !state[other]) {
+    inputOf(other).focus();
+  } else {
+    document.activeElement?.blur();
+    showHome();
+  }
+  map.fitPoints();
 }
+
+document.querySelectorAll('.clear').forEach((b) => b.addEventListener('click', (e) => {
+  e.preventDefault();
+  const which = b.dataset.clear;
+  state.items = [];
+  map.clearItinerary();
+  setPoint(which, null);
+  inputOf(which).focus();
+}));
 
 function nearestStopLabel(lat, lon) {
   const near = nearbyStops(state.index, lat, lon, 300)[0];
-  return near ? `Titik di peta · dekat ${state.network.stops.name[near.stop]}` : 'Titik di peta';
+  return near ? `Titik di peta (dekat ${state.network.stops.name[near.stop]})` : 'Titik di peta';
 }
 
 // ── saran ──
 let suggestAbort = null;
 let suggestTimer = 0;
-let suggestItems = [];
 
-function closeSuggest() {
-  els.suggest.hidden = true;
-  els.suggest.innerHTML = '';
-  if (suggestAbort) suggestAbort.abort();
+function showSuggestions(which, result) {
+  state.view = 'suggest';
+  renderSuggestions(els.content, result,
+    (item) => setPoint(which, { lat: item.lat, lon: item.lon, name: item.name }),
+    () => startPick(which));
 }
-
-function renderSuggest(result, pendingPlaces) {
-  const rows = [];
-  suggestItems = [];
-  const add = (item, icon) => {
-    suggestItems.push(item);
-    rows.push(`<button type="button" role="option" class="sg" data-i="${suggestItems.length - 1}">
-      <span class="sg-ico sg-${icon}" aria-hidden="true"></span>
-      <span class="sg-txt"><b>${esc(item.name)}</b>${item.detail ? `<small>${esc(item.detail)}</small>` : ''}</span></button>`);
-  };
-  result.stops.forEach((s) => add(s, 'stop'));
-  result.places.forEach((p) => add(p, 'place'));
-  if (pendingPlaces) rows.push('<p class="sg-note">Mencari tempat…</p>');
-  if (result.placesFailed) rows.push('<p class="sg-note">Pencarian tempat sedang tidak tersedia. Halte tetap bisa dipilih.</p>');
-  if (!pendingPlaces && !result.stops.length && !result.places.length && !result.placesFailed) rows.push('<p class="sg-note">Tidak ditemukan. Coba nama halte, gedung, atau jalan.</p>');
-  rows.push(`<button type="button" class="sg sg-pick" data-pick="1"><span class="sg-ico sg-pin" aria-hidden="true"></span><span class="sg-txt"><b>Pilih di peta</b></span></button>`);
-  els.suggest.innerHTML = rows.join('');
-  els.suggest.hidden = false;
-}
-
-els.suggest.addEventListener('pointerdown', (e) => e.preventDefault()); // jaga fokus input
-els.suggest.addEventListener('click', (e) => {
-  const b = e.target.closest('button');
-  if (!b) return;
-  if (b.dataset.pick) { startPick(state.active); return; }
-  const item = suggestItems[Number(b.dataset.i)];
-  if (item) setPoint(state.active, { lat: item.lat, lon: item.lon, name: item.name });
-});
 
 function onType(which) {
   state.active = which;
+  syncClear(which);
   if (state[which]) { state[which] = null; map.setPoint(which, null); }
   const text = inputOf(which).value;
   clearTimeout(suggestTimer);
   if (suggestAbort) suggestAbort.abort();
   if (!state.search) return;
-  if (!text.trim()) { closeSuggest(); return; }
-  const stops = state.search.suggestStops(text);
-  renderSuggest({ stops, places: [], placesFailed: false }, text.trim().length >= 3);
+  if (!text.trim()) { showSuggestions(which, { stops: [], places: [], placesFailed: false, pending: false }); return; }
+  showSuggestions(which, { stops: state.search.suggestStops(text), places: [], placesFailed: false, pending: text.trim().length >= 3 });
   suggestTimer = setTimeout(async () => {
     suggestAbort = new AbortController();
     try {
       const res = await state.search.suggest(text, suggestAbort.signal);
-      if (inputOf(which).value === text && document.activeElement === inputOf(which)) renderSuggest(res, false);
+      if (inputOf(which).value === text && state.active === which) showSuggestions(which, { ...res, pending: false });
     } catch (e) {
       if (e.name !== 'AbortError') throw e;
     }
   }, 300);
 }
 
+// Ketukan pada daftar saran tidak boleh mencabut fokus input lebih dulu.
+els.content.addEventListener('pointerdown', (e) => {
+  if (state.view === 'suggest' && e.target.closest('button')) e.preventDefault();
+});
+
 for (const which of ['from', 'to']) {
   const input = inputOf(which);
   input.addEventListener('input', () => onType(which));
   input.addEventListener('focus', () => {
     state.active = which;
+    sheet.set('large');
     input.select();
     if (input.value.trim() && !state[which]) onType(which);
-    else renderSuggest({ stops: [], places: [], placesFailed: false }, false);
+    else showSuggestions(which, { stops: [], places: [], placesFailed: false, pending: false });
   });
   input.addEventListener('blur', () => setTimeout(() => {
-    if (!document.activeElement || !document.activeElement.closest('#suggest, #card')) closeSuggest();
-  }, 0));
+    if (state.active !== which || document.activeElement === els.from || document.activeElement === els.to) return;
+    state.active = null;
+    // Teks yang diketik tanpa memilih saran dikembalikan ke titik yang tersimpan.
+    if (state[which]) input.value = state[which].name;
+    syncClear(which);
+    if (state.view === 'suggest') {
+      restoreView();
+      sheet.set('medium');
+    }
+  }, 120));
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && suggestItems[0]) {
-      e.preventDefault();
-      setPoint(which, { lat: suggestItems[0].lat, lon: suggestItems[0].lon, name: suggestItems[0].name });
-    } else if (e.key === 'Escape') closeSuggest();
+    if (e.key === 'Enter') {
+      const first = els.content.querySelector('[data-i]');
+      if (first) { e.preventDefault(); first.click(); }
+    } else if (e.key === 'Escape') input.blur();
   });
 }
 
 // ── pilih di peta ──
 function startPick(which) {
-  closeSuggest();
-  inputOf(which).blur();
-  els.pickLabel.textContent = which === 'from' ? 'A (berangkat)' : 'B (tujuan)';
+  state.active = null;
+  document.activeElement?.blur();
+  els.pickLabel.textContent = which === 'from' ? 'berangkat' : 'tujuan';
   els.pickbar.hidden = false;
+  sheet.set('small');
   map.onPick(({ lat, lon }) => {
     stopPick();
     setPoint(which, { lat, lon, name: nearestStopLabel(lat, lon) });
+    if (!(state.from && state.to)) sheet.set('medium');
   });
 }
 function stopPick() {
   els.pickbar.hidden = true;
   map.onPick(null);
 }
-els.pickCancel.addEventListener('click', stopPick);
+els.pickCancel.addEventListener('click', () => { stopPick(); restoreView(); sheet.set('medium'); });
 
 // ── lokasi saya ──
 els.locate.addEventListener('click', () => {
@@ -190,7 +229,6 @@ els.locate.addEventListener('click', () => {
       showStatus(err.code === 1
         ? 'Izin lokasi ditolak. Ketik titik berangkat atau pilih di peta.'
         : 'Lokasi tidak didapat. Ketik titik berangkat atau pilih di peta.');
-      els.from.focus();
     },
     { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
   );
@@ -201,25 +239,13 @@ els.swap.addEventListener('click', () => {
   state.from = to; state.to = from;
   els.from.value = to ? to.name : '';
   els.to.value = from ? from.name : '';
+  syncClear('from'); syncClear('to');
   map.setPoint('from', state.from);
   map.setPoint('to', state.to);
   compute();
 });
 
-// ── sheet ──
-function openSheet() {
-  els.sheet.hidden = false;
-  els.sheet.classList.remove('is-collapsed');
-  syncInset();
-}
-function syncInset() {
-  requestAnimationFrame(() => map.setBottomInset(els.sheet.hidden ? 0 : els.sheet.getBoundingClientRect().height));
-}
-els.handle.addEventListener('click', () => {
-  els.sheet.classList.toggle('is-collapsed');
-  syncInset();
-});
-
+// ── hasil ──
 async function loadShapes() {
   if (state.shapes) return state.shapes;
   try {
@@ -236,24 +262,24 @@ function labels() {
 }
 
 function showList() {
-  state.selected = -1;
-  renderList(els.sheetBody, state.items, state.network, selectItem);
-  els.sheetBody.scrollTop = 0;
+  state.view = 'list';
+  renderList(els.content, state.items, state.network, selectItem);
+  els.content.scrollTop = 0;
   if (state.items[0]) loadShapes().then((shapes) => map.showItinerary(state.items[0].it, state.network, shapes));
 }
 
 async function selectItem(i) {
-  state.selected = i;
-  renderDetail(els.sheetBody, state.items[i], state.network, labels(), showList);
-  els.sheetBody.scrollTop = 0;
-  openSheet();
+  state.view = 'detail';
+  renderDetail(els.content, state.items[i], state.network, labels(), showList);
+  els.content.scrollTop = 0;
+  if (sheet.detent === 'small') sheet.set('medium');
   map.showItinerary(state.items[i].it, state.network, await loadShapes());
 }
 
 function emptyMessage() {
   const { from, to } = state;
-  if (!nearbyStops(state.index, from.lat, from.lon, ACCESS_M).length) return 'Tidak ada halte Transjakarta dalam 1 km dari titik A. Pilih titik lain yang lebih dekat ke halte.';
-  if (!nearbyStops(state.index, to.lat, to.lon, ACCESS_M).length) return 'Tidak ada halte Transjakarta dalam 1 km dari titik B. Pilih titik lain yang lebih dekat ke halte.';
+  if (!nearbyStops(state.index, from.lat, from.lon, ACCESS_M).length) return 'Tidak ada halte dalam 1 km dari titik berangkat. Pilih titik yang lebih dekat ke halte.';
+  if (!nearbyStops(state.index, to.lat, to.lon, ACCESS_M).length) return 'Tidak ada halte dalam 1 km dari tujuan. Pilih titik yang lebih dekat ke halte.';
   return 'Tidak ada layanan yang beroperasi untuk perjalanan ini pada jam tersebut. Ubah waktu berangkat lalu coba lagi.';
 }
 
@@ -262,11 +288,12 @@ function compute() {
   const dep = departure();
   const its = planAlternatives(state.index, { from: state.from, to: state.to, departSec: dep.sec, date: dep.date });
   state.items = its.map((it) => ({ it, fare: price(it, state.network) }));
-  openSheet();
+  sheet.set('medium');
   if (!state.items.length) {
+    state.view = 'empty';
     map.clearItinerary();
     map.fitPoints();
-    els.sheetBody.innerHTML = `<p class="empty">${esc(emptyMessage())}</p>`;
+    renderEmpty(els.content, emptyMessage());
     return;
   }
   showList();
@@ -282,8 +309,7 @@ async function load() {
     state.index = prepare(state.network);
     state.search = createSearch(state.network);
     hideStatus();
-    if (els.from.value && document.activeElement === els.from) onType('from');
-    if (els.to.value && document.activeElement === els.to) onType('to');
+    if (state.active && inputOf(state.active).value) onType(state.active);
   } catch (e) {
     showStatus('Data jaringan gagal dimuat. Periksa koneksi lalu muat ulang.', {
       sticky: true,
@@ -293,6 +319,7 @@ async function load() {
   }
 }
 
+showHome();
 load();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

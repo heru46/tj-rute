@@ -4,13 +4,13 @@ import { haversine } from './geo.js';
 
 const JAKARTA = [-6.2, 106.83];
 
-function pinIcon(label, cls) {
-  return L.divIcon({
-    className: `pin pin-${cls}`,
-    html: `<span>${label}</span>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-  });
+// A: titik putih bercincin biru (awal perjalanan); B: pin merah, seperti Apple Maps.
+const PIN_B = '<svg viewBox="0 0 28 36" aria-hidden="true"><path d="M14 35s12-11.2 12-20.5A12 12 0 0 0 2 14.5C2 23.8 14 35 14 35z" fill="#FF3B30" stroke="#fff" stroke-width="2"/><circle cx="14" cy="14" r="4.5" fill="#fff"/></svg>';
+
+function pinIcon(which) {
+  return which === 'from'
+    ? L.divIcon({ className: 'pin pin-from', html: '<span></span>', iconSize: [22, 22], iconAnchor: [11, 11] })
+    : L.divIcon({ className: 'pin pin-to', html: PIN_B, iconSize: [28, 36], iconAnchor: [14, 35] });
 }
 
 function nearestIndex(coords, lat, lon, from = 0) {
@@ -54,9 +54,9 @@ export function createMap(el) {
   });
 
   function padding() {
-    // Layar lebar: kartu dan panel ada di kolom kiri selebar 400 px (lihat styles.css).
-    if (window.matchMedia('(min-width: 760px)').matches) return { paddingTopLeft: [440, 24], paddingBottomRight: [24, 24] };
-    return { paddingTopLeft: [24, 150], paddingBottomRight: [24, bottomInset + 24] };
+    // Layar lebar: panel di kolom kiri (16 px + 380 px, lihat styles.css).
+    if (window.matchMedia('(min-width: 760px)').matches) return { paddingTopLeft: [420, 32], paddingBottomRight: [32, 32] };
+    return { paddingTopLeft: [28, 48], paddingBottomRight: [28, bottomInset + 20] };
   }
 
   return {
@@ -66,7 +66,7 @@ export function createMap(el) {
       if (markers[which]) { markers[which].remove(); markers[which] = null; }
       if (!point) return;
       markers[which] = L.marker([point.lat, point.lon], {
-        icon: pinIcon(which === 'from' ? 'A' : 'B', which),
+        icon: pinIcon(which),
         keyboard: false,
       }).addTo(map);
     },
