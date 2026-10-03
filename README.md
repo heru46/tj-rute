@@ -3,6 +3,8 @@
 Panduan naik Transjakarta dari titik A ke B: rute, tempat pindah, waktu, dan tarif.
 Webapp statis; rute dihitung di browser dari GTFS resmi Transjakarta.
 
+Live: https://heru46.github.io/tj-rute/ — buka di HP, lalu "Tambahkan ke Layar Utama".
+
 ## Jalankan lokal
 
 ```bash
