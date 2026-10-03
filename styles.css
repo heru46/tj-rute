@@ -124,8 +124,9 @@ input { caret-color: var(--tint); }
   letter-spacing: .04em;
 }
 
-/* Logo di atas peta: wadah putih supaya tidak hilang di peta yang ramai.
-   Tinggi 37 px → lebar ±81 px, di atas ukuran minimum wordmark (80 px). */
+/* Logo di atas peta: wadah kaca buram setengah transparan — tetap terbaca di
+   peta ramai tapi tidak mencolok. Tinggi 37 px → lebar ±81 px, di atas ukuran
+   minimum wordmark (80 px). */
 .map-brand {
   position: fixed;
   z-index: 900;
@@ -133,11 +134,13 @@ input { caret-color: var(--tint); }
   left: 16px;
   padding: 10px 14px;
   border-radius: 14px;
-  background: #FFFFFF;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, .14);
+  background: rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .08);
   pointer-events: none;
 }
-.map-brand img { display: block; height: 37px; width: auto; }
+.map-brand img { display: block; height: 37px; width: auto; opacity: .8; }
 .map-credit {
   position: fixed;
   z-index: 900;
@@ -157,7 +160,8 @@ input { caret-color: var(--tint); }
   pointer-events: none;
 }
 @media (prefers-color-scheme: dark) {
-  .splash, .map-brand { background: #241F6B; }
+  .splash { background: #241F6B; }
+  .map-brand { background: rgba(36, 31, 107, .55); }
   .credit { color: rgba(255, 255, 255, .72); }
 }
 
