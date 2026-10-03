@@ -49,8 +49,10 @@ export function createMap(el) {
   let pickHandler = null;
   let bottomInset = 0;
 
+  let tapHandler = null;
   map.on('click', (e) => {
     if (pickHandler) pickHandler({ lat: e.latlng.lat, lon: e.latlng.lng });
+    else if (tapHandler) tapHandler();
   });
 
   function padding() {
@@ -74,6 +76,7 @@ export function createMap(el) {
       pickHandler = cb;
       el.classList.toggle('is-picking', !!cb);
     },
+    onTap(cb) { tapHandler = cb; },
     fitPoints() {
       const pts = [markers.from, markers.to].filter(Boolean).map((m) => m.getLatLng());
       if (pts.length === 1) map.setView(pts[0], Math.max(map.getZoom(), 15));

@@ -27,7 +27,16 @@ const state = {
   items: [], view: 'home',
 };
 const map = createMap($('#map'));
-const sheet = createSheet(els.sheet, { grabArea: els.head, head: els.head, onResize: (px) => map.setBottomInset(px) });
+const sheet = createSheet(els.sheet, {
+  head: els.head,
+  content: els.content,
+  grabber: $('#grabber'),
+  onResize: (px) => map.setBottomInset(px),
+});
+// Ketuk peta saat tidak memilih titik → sheet turun ke kecil supaya peta lega.
+map.onTap(() => {
+  if (sheet.detent !== 'small' && !document.activeElement?.matches('input')) sheet.set('small');
+});
 sheet.set('medium', false);
 
 // ── status ──

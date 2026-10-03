@@ -116,8 +116,11 @@ input { caret-color: var(--tint); }
   overflow: hidden;
 }
 .sheet.no-anim { transition: none; }
-.sheet-head { flex: none; padding: 0 16px 12px; touch-action: none; }
-.grabber { width: 36px; height: 5px; margin: 5px auto 9px; border-radius: 3px; background: var(--label-3); }
+.sheet-head { flex: none; padding: 0 16px 12px; }
+/* Grabber = tombol selebar sheet setinggi 28 px; garis 36×5 seperti iOS. */
+.grabber-zone { display: grid; width: calc(100% + 32px); height: 28px; margin: 0 -16px 2px; padding: 0; place-items: center; border: 0; background: none; }
+.grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); transition: background .15s ease; }
+.grabber-zone:active .grabber { background: var(--label-2); }
 .sheet-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -367,8 +370,8 @@ input { caret-color: var(--tint); }
     border-radius: 14px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, .18);
   }
-  .grabber { visibility: hidden; height: 0; margin: 12px 0 0; }
-  .sheet-head { touch-action: auto; }
+  .grabber-zone { display: none; }
+  .sheet-head { padding-top: 12px; }
   .toast { left: calc(50% + 198px); }
 }
 
