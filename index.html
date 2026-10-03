@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0B4DA2">
+  <meta name="description" content="Panduan naik Transjakarta dari titik A ke B: rute, tempat pindah, waktu, dan tarif.">
+  <title>TJ Rute — naik apa ke sana?</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="vendor/fonts/fonts.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="map" aria-label="Peta"></div>
+
+  <header class="card" id="card">
+    <div class="fields">
+      <div class="field">
+        <span class="mark mark-a" aria-hidden="true">A</span>
+        <input id="from" type="text" placeholder="Dari mana?" autocomplete="off" enterkeyhint="search" aria-label="Titik berangkat" aria-controls="suggest" aria-autocomplete="list">
+        <button type="button" id="locate" class="icon-btn" aria-label="Pakai lokasi saya" title="Pakai lokasi saya">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+        </button>
+      </div>
+      <div class="field">
+        <span class="mark mark-b" aria-hidden="true">B</span>
+        <input id="to" type="text" placeholder="Mau ke mana?" autocomplete="off" enterkeyhint="search" aria-label="Tujuan" aria-controls="suggest" aria-autocomplete="list">
+      </div>
+      <button type="button" id="swap" class="swap" aria-label="Tukar titik berangkat dan tujuan" title="Tukar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v15M8 4L4 8M8 4l4 4M16 20V5M16 20l4-4M16 20l-4-4"/></svg>
+      </button>
+    </div>
+    <label class="when">
+      <span>Berangkat</span>
+      <input id="when" type="datetime-local" aria-label="Waktu berangkat">
+      <button type="button" id="when-now" class="link-btn" hidden>Sekarang</button>
+    </label>
+  </header>
+
+  <div id="suggest" class="suggest" role="listbox" hidden></div>
+
+  <div id="pickbar" class="pickbar" hidden>
+    <span>Ketuk peta untuk titik <b id="pick-label">A</b></span>
+    <button type="button" id="pick-cancel" class="link-btn">Batal</button>
+  </div>
+
+  <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+
+  <section id="sheet" class="sheet" aria-label="Pilihan rute" hidden>
+    <button type="button" id="sheet-handle" class="handle" aria-label="Perbesar atau perkecil panel"></button>
+    <div id="sheet-body" class="sheet-body"></div>
+  </section>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
