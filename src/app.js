@@ -99,7 +99,7 @@ const tour = createTour({
   storageKey: 'tjrute.tour.v1',
   steps: [
     {
-      title: 'Selamat datang di TJ Rute',
+      title: 'Selamat datang di Kōro',
       text: 'Cari naik apa dari titik A ke B: Transjakarta, JakLingko, dan layanan lainnya. Enam langkah singkat, ±30 detik.',
       next: 'Mulai tur',
       before: () => { document.activeElement?.blur(); sheet.set('medium'); },
@@ -358,6 +358,20 @@ function compute() {
   showList();
 }
 
+// ── halaman pembuka ──
+// Tampil minimal 1,2 detik dan sampai data jaringan siap; ketuk untuk menutup lebih cepat.
+const splash = $('#splash');
+const splashMinTime = new Promise((r) => setTimeout(r, 1200));
+let splashResolve;
+const splashClosed = new Promise((r) => { splashResolve = r; });
+function closeSplash() {
+  if (splash.classList.contains('out')) return;
+  splash.classList.add('out');
+  setTimeout(() => splash.remove(), 450);
+  splashResolve();
+}
+splash.addEventListener('click', closeSplash);
+
 // ── muat data ──
 async function load() {
   showStatus('Memuat jaringan Transjakarta…', { sticky: true });
@@ -369,9 +383,13 @@ async function load() {
     state.search = createSearch(state.network);
     hideStatus();
     if (state.active && inputOf(state.active).value) onType(state.active);
+    splashMinTime.then(closeSplash);
     // Tur hanya otomatis untuk pengguna baru yang belum mulai mengetik.
-    if (!tour.seen && !state.active && !state.from && !state.to) setTimeout(() => tour.start(), 500);
+    splashClosed.then(() => setTimeout(() => {
+      if (!tour.seen && !state.active && !state.from && !state.to) tour.start();
+    }, 400));
   } catch (e) {
+    splashMinTime.then(closeSplash);
     showStatus('Data jaringan gagal dimuat. Periksa koneksi lalu muat ulang.', {
       sticky: true,
       action: { label: 'Muat ulang', run: () => location.reload() },

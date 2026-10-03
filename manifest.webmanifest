@@ -1,14 +1,14 @@
 {
-  "name": "TJ Rute — naik apa ke sana?",
-  "short_name": "TJ Rute",
+  "name": "Kōro — rute lengkap, gampang dimengerti",
+  "short_name": "Kōro",
   "description": "Panduan naik Transjakarta dari titik A ke B.",
   "lang": "id",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#EEF2F7",
-  "theme_color": "#0B4DA2",
+  "background_color": "#FFFFFF",
+  "theme_color": "#241F6B",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

@@ -1,4 +1,4 @@
-# TJ Rute
+# Kōro
 
 Panduan naik Transjakarta dari titik A ke B: rute, tempat pindah, waktu, dan tarif.
 Webapp statis; rute dihitung di browser dari GTFS resmi Transjakarta.

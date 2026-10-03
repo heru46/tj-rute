@@ -1,6 +1,6 @@
 // App shell: network-first (selalu versi terbaru saat online, cache saat offline).
 // Data jaringan: stale-while-revalidate (tampil cepat, diperbarui di latar).
-const VERSION = 'tj-rute-v3';
+const VERSION = 'tj-rute-v4';
 const SHELL = [
   './',
   'index.html',
@@ -25,6 +25,12 @@ const SHELL = [
   'vendor/fonts/Inter-var.woff2',
   'icons/icon.svg',
   'icons/icon-192.png',
+  'icons/apple-touch-icon.png',
+  'icons/favicon.ico',
+  'icons/koro-wordmark.svg',
+  'icons/koro-wordmark-reversed.svg',
+  'icons/koro-stacked.svg',
+  'icons/koro-stacked-reversed.svg',
 ];
 const DATA = ['data/network.json', 'data/shapes.json'];
 

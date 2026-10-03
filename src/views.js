@@ -17,7 +17,7 @@ function serviceTag(svc) {
 export function renderHome(el, onHelp) {
   el.innerHTML = `<ul class="group"><li><button type="button" class="cell cell-btn" data-help="1">
       <span class="badge badge-tint">${ICONS.help}</span>
-      <span class="cell-text"><b class="tint">Cara pakai TJ Rute</b></span>
+      <span class="cell-text"><b class="tint">Cara pakai Kōro</b></span>
     </button></li></ul>
     <h2 class="section-title">Jenis layanan</h2>
     <ul class="group legend">${SERVICES.map((s) => `<li class="cell">

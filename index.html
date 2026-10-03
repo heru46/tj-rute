@@ -8,18 +8,36 @@
   <meta name="color-scheme" content="light dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="TJ Rute">
+  <meta name="apple-mobile-web-app-title" content="Kōro">
   <meta name="description" content="Panduan naik Transjakarta dari titik A ke B: rute, tempat pindah, waktu, dan tarif.">
-  <title>TJ Rute</title>
+  <title>Kōro</title>
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon.ico" sizes="48x48">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="vendor/fonts/fonts.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Halaman pembuka: tampil saat app dibuka, hilang setelah data siap (atau diketuk). -->
+  <div id="splash" class="splash">
+    <picture>
+      <source srcset="icons/koro-stacked-reversed.svg" media="(prefers-color-scheme: dark)">
+      <img src="icons/koro-stacked.svg" alt="Kōro" width="382" height="344">
+    </picture>
+    <p class="credit">herujoko@2026</p>
+  </div>
+
   <div id="map" aria-label="Peta"></div>
+
+  <div class="map-brand">
+    <picture>
+      <source srcset="icons/koro-wordmark-reversed.svg" media="(prefers-color-scheme: dark)">
+      <img src="icons/koro-wordmark.svg" alt="Kōro" width="358" height="163">
+    </picture>
+  </div>
+  <p class="map-credit">herujoko@2026</p>
 
   <div id="status" class="toast" role="status" aria-live="polite" hidden></div>
   <div id="pickbar" class="toast toast-action" hidden>

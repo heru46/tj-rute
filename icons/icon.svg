@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0B4DA2"/>
-  <path d="M150 140 V330 C150 372 184 392 226 392 H362" fill="none" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round" stroke-dasharray="1 0"/>
-  <circle cx="150" cy="140" r="46" fill="#0E1A2B" stroke="#FFFFFF" stroke-width="18"/>
-  <rect x="318" y="348" width="88" height="88" rx="20" fill="#FFC21A" stroke="#FFFFFF" stroke-width="18"/>
-  <circle cx="150" cy="250" r="20" fill="#FFFFFF"/>
-  <circle cx="262" cy="392" r="20" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><title>Kōro</title><rect width="256" height="256" rx="57.6" fill="#241F6B"/><g transform="translate(40.96 33.96) scale(0.68)"><path fill-rule="evenodd" fill="#FFFFFF" d="M40,152A88,88 0 1 1 216,152A88,88 0 1 1 40,152ZM88,152A40,40 0 1 0 168,152A40,40 0 1 0 88,152Z"/><path fill="#FFFFFF" d="M113,152A15,15 0 1 1 143,152A15,15 0 1 1 113,152Z"/><path fill="#F04A23" d="M70,62L186,62A24,24 0 0 0 186,14L70,14A24,24 0 0 0 70,62Z"/></g></svg>
