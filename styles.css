@@ -113,14 +113,32 @@ input { caret-color: var(--tint); }
   background: var(--bg);
   box-shadow: 0 -1px 0 var(--separator), 0 -8px 30px rgba(0, 0, 0, .12);
   transition: height .32s cubic-bezier(.32, .72, 0, 1);
-  overflow: hidden;
+  overflow: visible; /* poni menonjol di atas tepi; isi menggulir di .sheet-body */
 }
 .sheet.no-anim { transition: none; }
 .sheet-head { flex: none; padding: 0 16px 12px; }
-/* Grabber = tombol selebar sheet setinggi 28 px; garis 36×5 seperti iOS. */
-.grabber-zone { display: grid; width: calc(100% + 32px); height: 28px; margin: 0 -16px 2px; padding: 0; place-items: center; border: 0; background: none; }
+/* Grabber = tombol: baris selebar sheet (28 px) + "poni" yang menonjol di atas tepi
+   sheet (120×26 px), jadi total area ketuk ±54 px — mudah dijangkau jempol besar. */
+.grabber-zone { position: relative; display: grid; width: calc(100% + 32px); height: 28px; margin: 0 -16px 2px; padding: 0; place-items: center; border: 0; background: none; }
 .grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--label-3); transition: background .15s ease; }
+.poni {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  display: grid;
+  width: 120px;
+  height: 26px;
+  place-items: center;
+  border-radius: 14px 14px 0 0;
+  background: var(--bg);
+  color: var(--label-2);
+  box-shadow: 0 -6px 12px -6px rgba(0, 0, 0, .22);
+  transform: translateX(-50%);
+}
+.poni .ico { width: 20px; height: 20px; stroke-width: 2.6; margin-top: 4px; transition: transform .3s cubic-bezier(.32, .72, 0, 1); }
+.sheet[data-detent="large"] .poni .ico { transform: rotate(180deg); }
 .grabber-zone:active .grabber { background: var(--label-2); }
+.grabber-zone:active .poni { color: var(--tint); }
 .sheet-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -375,6 +393,49 @@ input { caret-color: var(--tint); }
   .toast { left: calc(50% + 198px); }
 }
 
+/* ── Tur pengguna pertama ── */
+.tour { position: fixed; inset: 0; z-index: 1200; pointer-events: none; }
+.tour-spot {
+  position: fixed;
+  box-shadow: 0 0 0 200vmax rgba(0, 0, 0, .55);
+  transition: top .35s cubic-bezier(.32, .72, 0, 1), left .35s cubic-bezier(.32, .72, 0, 1),
+              width .35s cubic-bezier(.32, .72, 0, 1), height .35s cubic-bezier(.32, .72, 0, 1),
+              border-radius .35s ease;
+}
+.tour-card {
+  position: fixed;
+  width: min(340px, calc(100vw - 24px));
+  padding: 16px 16px 12px;
+  border-radius: 14px;
+  background: var(--cell);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .28);
+  pointer-events: auto;
+  transition: top .35s cubic-bezier(.32, .72, 0, 1), left .35s cubic-bezier(.32, .72, 0, 1);
+}
+.tour-card.in { animation: tour-in .3s cubic-bezier(.32, .72, 0, 1); }
+@keyframes tour-in { from { opacity: 0; } to { opacity: 1; } }
+.tour-dots { display: flex; gap: 5px; margin-bottom: 10px; }
+.tour-dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--label-3); transition: width .25s ease, background .25s ease; }
+.tour-dots i.on { width: 18px; background: var(--tint); }
+.tour-card h3 { margin: 0 0 4px; font-size: 17px; line-height: 22px; font-weight: 600; }
+.tour-card p { margin: 0; color: var(--label-2); font-size: 15px; line-height: 20px; }
+.tour-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; }
+.tour-skip { padding: 8px 4px; color: var(--label-2); font-weight: 400; }
+.tour-next {
+  min-width: 96px;
+  height: 40px;
+  margin-left: auto;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--tint);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+.tour-next:active { opacity: .8; }
+
 @media (prefers-reduced-motion: reduce) {
-  .sheet { transition: none; }
+  .sheet, .tour-spot, .tour-card { transition: none; }
+  .tour-card.in { animation: none; }
 }

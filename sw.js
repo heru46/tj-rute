@@ -1,6 +1,6 @@
 // App shell: network-first (selalu versi terbaru saat online, cache saat offline).
 // Data jaringan: stale-while-revalidate (tampil cepat, diperbarui di latar).
-const VERSION = 'tj-rute-v2';
+const VERSION = 'tj-rute-v3';
 const SHELL = [
   './',
   'index.html',
@@ -16,6 +16,7 @@ const SHELL = [
   'src/sheet.js',
   'src/icons.js',
   'src/services.js',
+  'src/tour.js',
   'src/format.js',
   'src/polyline.js',
   'vendor/leaflet/leaflet.js',

@@ -20,4 +20,6 @@ export const ICONS = {
   close: svg('<path d="m7 7 10 10M17 7 7 17"/>'),
   pin: svg('<path d="M12 21s-6.5-5.8-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.2 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/>'),
   target: svg('<circle cx="12" cy="12" r="7"/><path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4"/>'),
+  chevronUp: svg('<path d="M5.5 15 12 8.5l6.5 6.5"/>'),
+  help: svg('<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.7-2.4 2.2-2.4 3.6"/><circle cx="12" cy="17.2" r=".9" class="f"/>'),
 };

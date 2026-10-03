@@ -14,13 +14,18 @@ function serviceTag(svc) {
   return `<span class="stag" style="--s:${svc.color}">${serviceIcon(svc)}${esc(svc.name)}</span>`;
 }
 
-export function renderHome(el) {
-  el.innerHTML = `<h2 class="section-title">Jenis layanan</h2>
+export function renderHome(el, onHelp) {
+  el.innerHTML = `<ul class="group"><li><button type="button" class="cell cell-btn" data-help="1">
+      <span class="badge badge-tint">${ICONS.help}</span>
+      <span class="cell-text"><b class="tint">Cara pakai TJ Rute</b></span>
+    </button></li></ul>
+    <h2 class="section-title">Jenis layanan</h2>
     <ul class="group legend">${SERVICES.map((s) => `<li class="cell">
       <span class="badge" style="--s:${s.color}">${serviceIcon(s)}</span>
       <span class="cell-text"><b>${esc(s.name)}</b><small>${esc(s.note)}</small></span>
     </li>`).join('')}</ul>
     <p class="footnote">Data rute, halte, dan jadwal dari GTFS resmi Transjakarta.</p>`;
+  el.querySelector('[data-help]').addEventListener('click', onHelp);
 }
 
 export function renderSuggestions(el, { stops, places, placesFailed, pending }, onPick, onPickMap) {

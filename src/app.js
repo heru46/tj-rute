@@ -6,6 +6,7 @@ import { createSheet } from './sheet.js';
 import { ICONS } from './icons.js';
 import { renderHome, renderSuggestions, renderList, renderDetail, renderEmpty } from './views.js';
 import { escapeHtml as esc } from './format.js';
+import { createTour, unionRect } from './tour.js';
 
 const $ = (s) => document.querySelector(s);
 const els = {
@@ -90,8 +91,57 @@ els.whenNow.addEventListener('click', () => {
 // ── tampilan isi sheet ──
 function showHome() {
   state.view = 'home';
-  renderHome(els.content);
+  renderHome(els.content, () => tour.start());
 }
+
+// ── tur pengguna pertama ──
+const tour = createTour({
+  storageKey: 'tjrute.tour.v1',
+  steps: [
+    {
+      title: 'Selamat datang di TJ Rute',
+      text: 'Cari naik apa dari titik A ke B: Transjakarta, JakLingko, dan layanan lainnya. Enam langkah singkat, ±30 detik.',
+      next: 'Mulai tur',
+      before: () => { document.activeElement?.blur(); sheet.set('medium'); },
+    },
+    {
+      title: 'Isi Dari dan Ke',
+      text: 'Ketik nama halte, gedung, atau jalan. Halte muncul paling atas, tempat umum di bawahnya. Bisa juga pilih titik langsung di peta.',
+      target: () => $('.route-form'),
+    },
+    {
+      title: 'Lokasi dan jam berangkat',
+      text: '"Lokasi saya" mengisi titik berangkat dari GPS. Ketuk "Berangkat sekarang" untuk memilih jam lain — jam operasi tiap layanan berbeda.',
+      target: () => $('.chips'),
+      radius: 20,
+    },
+    {
+      title: 'Ketuk poni untuk buka-tutup',
+      text: 'Ketuk poni ini untuk membesarkan panel, ketuk lagi untuk mengecilkan. Coba sekarang.',
+      target: () => unionRect([$('.poni').getBoundingClientRect(), $('#grabber').getBoundingClientRect()]),
+      radius: 16,
+    },
+    {
+      title: 'Geser panel, ketuk peta',
+      text: 'Geser daftar ke atas untuk melihat semua pilihan rute; tarik ke bawah dari atas daftar untuk mengecilkan. Ketuk peta untuk menurunkan panel agar garis rute terlihat.',
+      target: () => els.sheet,
+      before: () => sheet.set('medium'),
+      radius: 12,
+    },
+    {
+      title: 'Kenali jenis layanan',
+      text: 'Ikon di depan nomor rute menunjukkan jenis layanan: bus BRT, bus Non-BRT, angkot JakLingko, dan lainnya. Daftar lengkapnya ada di sini.',
+      target: () => $('.legend'),
+      before: () => {
+        if (state.view !== 'home') showHome();
+        sheet.set('large');
+        $('.legend')?.scrollIntoView({ block: 'nearest' });
+      },
+      radius: 10,
+    },
+  ],
+  onEnd: () => sheet.set('medium'),
+});
 
 function restoreView() {
   if (state.items.length && state.from && state.to) showList();
@@ -319,6 +369,8 @@ async function load() {
     state.search = createSearch(state.network);
     hideStatus();
     if (state.active && inputOf(state.active).value) onType(state.active);
+    // Tur hanya otomatis untuk pengguna baru yang belum mulai mengetik.
+    if (!tour.seen && !state.active && !state.from && !state.to) setTimeout(() => tour.start(), 500);
   } catch (e) {
     showStatus('Data jaringan gagal dimuat. Periksa koneksi lalu muat ulang.', {
       sticky: true,
